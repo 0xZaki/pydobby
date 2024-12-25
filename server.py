@@ -6,6 +6,47 @@ from urllib.parse import urlparse, parse_qs
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
+
+
+class HTTPResponse:
+    STATUS_CODES = {
+        200: "OK",
+        201: "Created",
+        204: "No Content",
+        400: "Bad Request",
+        401: "Unauthorized",
+        403: "Forbidden",
+        404: "Not Found",
+        405: "Method Not Allowed",
+        500: "Internal Server Error",
+        501: "Not Implemented",
+        502: "Bad Gateway",
+        503: "Service Unavailable"
+    }
+
+    def __init__(self, status_code=200, body="",headers={}):
+        self._validate_status_code(status_code)
+        self.status_code = status_code
+        self.headers = headers
+        self.body = body
+        self.status_text = self.STATUS_CODES.get(status_code, "temp")
+    
+    def _validate_status_code(self, status_code):
+        try:
+            self.status_code = int(status_code)
+        except (ValueError, TypeError):
+            raise TypeError("HTTP status code must be an integer.")
+        
+        if not 100 <= status_code <= 599:
+            raise ValueError("status code must be between 100 and 599")
+    
+    def to_bytes(self):
+        response = f"HTTP/1.1 {self.status_code} {self.status_text}\r\n"
+        for header, value in self.headers.items():
+            response += f"{header}: {value}\r\n"
+        response += "\r\n" + self.body
+        return response.encode('utf-8')
+
 class HTTPRequest:
     def __init__(self, raw_data: str):
         self.method = ''
@@ -46,7 +87,7 @@ class HTTPRequest:
             logging.error(f"Error parsing request line: {e}")
 
 
-class TCPServer:
+class HTTPServer:
     def __init__(self, host='0.0.0.0', port=8001):
         self.host = host
         self.port = port
@@ -89,15 +130,15 @@ class TCPServer:
 
                 message = data.decode('utf-8')
                 request = HTTPRequest(message)
-                print(request.body,'====request body')
-                print(request.query_params,'====query params')
-                print(request.headers,'======headers')
-                print(request.path,'======path')
                 logging.info(f"Received from {address}: {message}")
                 
-                response = f"Server received: {message}"
-                client_socket.send(response.encode('utf-8'))
-                
+                response = HTTPResponse(
+                    status_code=407,
+                    body="TEEEST"
+                )
+                client_socket.sendall(response.to_bytes())
+                client_socket.close()
+                logging.info(f"Connection closed with {address}")
         except Exception as e:
             logging.error(f"Error handling client {address}: {e}")
         finally:
@@ -110,7 +151,7 @@ class TCPServer:
         logging.info("Server stopped")
 
 if __name__ == "__main__":
-    server = TCPServer()
+    server = HTTPServer()
     try:
         server.start()
     except KeyboardInterrupt:
