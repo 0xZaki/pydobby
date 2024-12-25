@@ -1,8 +1,50 @@
 import socket
 import threading
 import logging
+from urllib.parse import urlparse, parse_qs
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+
+class HTTPRequest:
+    def __init__(self, raw_data: str):
+        self.method = ''
+        self.path = ''
+        self.headers = {}
+        self.body = ''
+        self.query_params = {}
+        self._parse_request(raw_data)
+    
+    def _parse_request(self, raw_data: str):
+        try:
+            # get header and body
+            header_section, *body_section = raw_data.split('\r\n\r\n')
+            request_lines = header_section.split('\r\n')
+            # parse request line
+            if request_lines:
+                self._parse_request_line(request_lines[0])
+
+            # parse headers
+            for line in request_lines[1:]:
+                if ':' in line:
+                    key, value = line.split(':', 1)
+                    self.headers[key.strip().lower()] = value.strip()
+
+            self.body = body_section[0] if body_section else ''
+
+        except Exception as e:
+            logging.error(f"Error parsing request: {e}")
+
+    def _parse_request_line(self, request_line: str):
+        try:
+            method, path, _ = request_line.split(' ')
+            self.method = method.upper()
+            url = urlparse(path)
+            self.path = path
+            self.query_params = parse_qs(url.query)            
+        except Exception as e:
+            logging.error(f"Error parsing request line: {e}")
+
 
 class TCPServer:
     def __init__(self, host='0.0.0.0', port=8001):
@@ -42,11 +84,15 @@ class TCPServer:
         try:
             while True:
                 data = client_socket.recv(1024)
-                print(data,'dataa')
                 if not data:
                     break
-                
+
                 message = data.decode('utf-8')
+                request = HTTPRequest(message)
+                print(request.body,'====request body')
+                print(request.query_params,'====query params')
+                print(request.headers,'======headers')
+                print(request.path,'======path')
                 logging.info(f"Received from {address}: {message}")
                 
                 response = f"Server received: {message}"
