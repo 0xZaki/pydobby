@@ -3,6 +3,7 @@ from urllib.parse import urlparse, parse_qs
 
 
 class HTTPRequest:
+
     def __init__(self, raw_data: str):
         self.method = ''
         self.path = ''
@@ -11,7 +12,7 @@ class HTTPRequest:
         self.query_params = {}
         self.is_valid = True
         self._parse_request(raw_data)
-    
+
     def _parse_request(self, raw_data: str):
         try:
             # get header and body
@@ -42,7 +43,7 @@ class HTTPRequest:
             self.method = method.upper()
             url = urlparse(path)
             self.path = path
-            self.query_params = parse_qs(url.query)            
+            self.query_params = parse_qs(url.query)
         except Exception as e:
             logging.error(f"Error parsing request line: {e}")
             self.is_valid = False
@@ -64,7 +65,7 @@ class HTTPResponse:
         503: "Service Unavailable"
     }
 
-    def __init__(self, status_code=200, body: str = "", headers: dict = None,content_type: str = "text/plain"):
+    def __init__(self, status_code=200, body: str = "", headers: dict = None, content_type: str = "text/plain"):
         print(status_code, body, headers, content_type)
         self._validate_status_code(status_code)
         self.status_code = status_code
@@ -79,18 +80,17 @@ class HTTPResponse:
         elif self.headers["Content-Type"] != content_type:
             raise ValueError("Content-Type header must be the same as the content_type argument")
         self.headers.pop("Content-Length", None)
-        self.headers["Content-Length"] = str(len(self.body))
-
+        self.headers["Content-Length"] = str(len(self.body.encode('utf-8')))
 
     def _validate_status_code(self, status_code: int):
         try:
             self.status_code = int(status_code)
         except (ValueError, TypeError):
             raise TypeError("HTTP status code must be an integer.")
-        
+
         if not 100 <= status_code <= 599:
             raise ValueError("status code must be between 100 and 599")
-    
+
     def to_bytes(self):
         response = f"HTTP/1.1 {self.status_code} {self.status_text}\r\n"
         if self.headers:

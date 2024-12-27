@@ -6,10 +6,8 @@ server = HTTPServer()
 
 @server.get("/hello")
 def home(request: HTTPRequest) -> HTTPResponse:
-    data = {
-        "name": "John",
-    }
-    return HTTPResponse(body=json.dumps(data), content_type="application/json")
+    data = "Jühn"
+    return HTTPResponse(body=data)
 
 @server.post("/submit")
 def submit(request: HTTPRequest) -> HTTPResponse:

@@ -1,32 +1,34 @@
+import logging
 import socket
 import threading
-import logging
-from pydobby.router import Router
+
 from pydobby.http import HTTPRequest, HTTPResponse
+from pydobby.router import Router
+
 
 class HTTPServer:
-    def __init__(self, host: str="0.0.0.0", port: int=8000):
+    def __init__(self, host: str = "0.0.0.0", port: int = 8000):
         self.host = host
         self.port = port
 
         # refer to https://docs.python.org/3/library/socket.html (unix sockets)
-        self.server_socket = socket.socket(family=socket.AF_INET,type = socket.SOCK_STREAM)
+        self.server_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
 
         # allow reuse of the same address if socket is in TIME_WAIT state
         self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        
+
         self.router = Router()
-    
+
     # method shortcuts
     def get(self, path: str):
         return self.router.get(path)
-    
+
     def post(self, path: str):
         return self.router.post(path)
-    
+
     def put(self, path: str):
         return self.router.put(path)
-    
+
     def delete(self, path: str):
         return self.router.delete(path)
 
@@ -56,11 +58,9 @@ class HTTPServer:
                 message = data.decode('utf-8')
                 logging.info(f"Received from {address}: {message}")
 
-                request = HTTPRequest(message)                
+                request = HTTPRequest(message)
                 if not request.is_valid:
                     response = HTTPResponse(400)
                 else:
                     response = self.router.handle_request(request)
                 return client_socket.sendall(response.to_bytes())
-
-
