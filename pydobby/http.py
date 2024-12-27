@@ -57,13 +57,23 @@ class HTTPResponse:
         503: "Service Unavailable"
     }
 
-    def __init__(self, status_code=200, body: str = "", headers: dict = {}):
+    def __init__(self, status_code=200, body: str = "", headers: dict = None,content_type: str = "text/plain"):
         self._validate_status_code(status_code)
         self.status_code = status_code
-        self.headers = headers
         self.body = body
         self.status_text = self.STATUS_CODES.get(status_code, "temp")
-    
+        self.content_type = content_type
+        self.headers = {}
+        if headers:
+            self.headers.update(headers)
+        if "Content-Type" not in self.headers:
+            self.headers["Content-Type"] = content_type
+        elif self.headers["Content-Type"] != content_type:
+            raise ValueError("Content-Type header must be the same as the content_type argument")
+        self.headers.pop("Content-Length", None)
+        self.headers["Content-Length"] = str(len(self.body))
+
+
     def _validate_status_code(self, status_code: int):
         try:
             self.status_code = int(status_code)
@@ -75,7 +85,8 @@ class HTTPResponse:
     
     def to_bytes(self):
         response = f"HTTP/1.1 {self.status_code} {self.status_text}\r\n"
-        for header, value in self.headers.items():
-            response += f"{header}: {value}\r\n"
+        if self.headers:
+            for header, value in self.headers.items():
+                response += f"{header}: {value}\r\n"
         response += "\r\n" + self.body
         return response.encode('utf-8')
