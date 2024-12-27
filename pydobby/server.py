@@ -32,29 +32,22 @@ class HTTPServer:
 
     def start(self):
         """Start server"""
-        try:
+        with self.server_socket:
             self.server_socket.bind((self.host, self.port))
             self.server_socket.listen()
             logging.info(f"server started >> {self.host}:{self.port}")
-            
             while True:
                 client_socket, address = self.server_socket.accept()
                 logging.info(f"new connection: {address}")
-                
-                # start a thread to handle client
                 client_thread = threading.Thread(
                     target=self.handle_client,
                     args=(client_socket, address)
                 )
                 client_thread.start()
-                
-        except Exception as e:
-            logging.error(f"server error: {e}")
-            self.stop()
 
     def handle_client(self, client_socket, address):
         """Handle client connections"""
-        try:
+        with client_socket:
             while True:
                 data = client_socket.recv(1024)
                 if not data:
@@ -65,18 +58,6 @@ class HTTPServer:
                 logging.info(f"Received from {address}: {message}")
                 
                 response = self.router.handle_request(request)
-                client_socket.sendall(response.to_bytes())
-                client_socket.close()
-
-        except Exception as e:
-            logging.error(f"Error handling client {address}: {e}")
-        finally:
-            client_socket.close()
-            logging.info(f"Connection closed with {address}")
-
-    def stop(self):
-        """close server socket"""
-        self.server_socket.close()
-        logging.info("Server stopped")
+                return client_socket.sendall(response.to_bytes())
 
 
