@@ -18,6 +18,11 @@ class HTTPServer:
         self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         self.router = Router()
+        self.middlewares = []
+
+    
+    def register_middleware(self, middleware_class):
+        self.middlewares.append(middleware_class)
 
     # method shortcuts
     def get(self, path: str):
@@ -62,5 +67,9 @@ class HTTPServer:
                 if not request.is_valid:
                     response = HTTPResponse(400)
                 else:
-                    response = self.router.handle_request(request)
+                    # chain middlewares
+                    handler = self.router.handle_request
+                    for middleware_class in reversed(self.middlewares):
+                        handler = middleware_class(handler)
+                    response = handler(request)
                 return client_socket.sendall(response.to_bytes())
