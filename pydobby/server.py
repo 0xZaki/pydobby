@@ -2,7 +2,7 @@ import socket
 import threading
 import logging
 from pydobby.router import Router
-from pydobby.http import HTTPRequest
+from pydobby.http import HTTPRequest, HTTPResponse
 
 class HTTPServer:
     def __init__(self, host: str="0.0.0.0", port: int=8000):
@@ -54,10 +54,13 @@ class HTTPServer:
                     break
 
                 message = data.decode('utf-8')
-                request = HTTPRequest(message)
                 logging.info(f"Received from {address}: {message}")
-                
-                response = self.router.handle_request(request)
+
+                request = HTTPRequest(message)                
+                if not request.is_valid:
+                    response = HTTPResponse(400)
+                else:
+                    response = self.router.handle_request(request)
                 return client_socket.sendall(response.to_bytes())
 
 
