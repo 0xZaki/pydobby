@@ -56,20 +56,25 @@ class HTTPServer:
         """Handle client connections"""
         with client_socket:
             while True:
-                data = client_socket.recv(1024)
-                if not data:
-                    break
+                try:
+                    data = client_socket.recv(1024)
+                    if not data:
+                        break
 
-                message = data.decode('utf-8')
-                logging.info(f"Received from {address}: {message}")
+                    message = data.decode('utf-8')
+                    logging.info(f"Received from {address}: {message}")
 
-                request = HTTPRequest(message)
-                if not request.is_valid:
-                    response = HTTPResponse(400)
-                else:
-                    # chain middlewares
-                    handler = self.router.handle_request
-                    for middleware_class in reversed(self.middlewares):
-                        handler = middleware_class(handler)
-                    response = handler(request)
-                return client_socket.sendall(response.to_bytes())
+                    request = HTTPRequest(message)
+                    if not request.is_valid:
+                        response = HTTPResponse(400)
+                    else:
+                        # chain middlewares
+                        handler = self.router.handle_request
+                        for middleware_class in reversed(self.middlewares):
+                            handler = middleware_class(handler)
+                        response = handler(request)
+                    return client_socket.sendall(response.to_bytes())
+
+                except Exception as e:
+                    client_socket.sendall(HTTPResponse(500).to_bytes())
+                    raise RuntimeError('internal server error:', e)
