@@ -5,8 +5,8 @@ from .server import HTTPServer
 
 
 class PyDobby:
-    def __init__(self):
-        self.server = HTTPServer()
+    def __init__(self, host='127.0.0.1', port=8000):
+        self.server = HTTPServer(host, port)
 
     def get(self, path):
         """Register a GET route"""

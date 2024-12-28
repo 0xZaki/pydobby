@@ -3,7 +3,7 @@ import logging
 
 from pydobby import PyDobby, HTTPRequest, HTTPResponse
 
-app = PyDobby()
+app = PyDobby(port=8001)
 
 
 class LoggingMiddleware:
