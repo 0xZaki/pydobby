@@ -1,5 +1,5 @@
 from pydobby.http import HTTPRequest, HTTPResponse
-
+import re
 
 class Router:
     def __init__(self):
@@ -24,15 +24,28 @@ class Router:
         return lambda handler: self.add_route(path, 'DELETE', handler)
 
     def handle_request(self, request: HTTPRequest) -> HTTPResponse:
-        if request.path not in self.routes:
+        handlers,params = self._match_path(request)
+        if not handlers:
             return HTTPResponse(
                 status_code=404,
             )
-
-        handlers = self.routes[request.path]
         if request.method not in handlers:
             return HTTPResponse(
                 status_code=405,
             )
 
-        return handlers[request.method](request)
+        return handlers[request.method](request, **params)
+
+    def _match_path(self, request: HTTPRequest) -> dict:
+        for path, handlers in self.routes.items():
+            regex_path = re.sub(r'<(\w+)>', r'(?P<\1>[^/]+)', path)
+
+            regex_path = f"^{regex_path}$"
+
+            match = re.match(regex_path, request.path)
+
+            if match:
+                params = match.groupdict()
+                return handlers, params
+            
+        return None, None

@@ -20,7 +20,12 @@ server.register_middleware(LoggingMiddleware)
 
 @server.get("/hello")
 def home(request: HTTPRequest) -> HTTPResponse:
-    data = "Jühn"
+    data = f"hello anon"
+    return HTTPResponse(body=data)
+
+@server.get("/hello/<name>")
+def home(request: HTTPRequest, name) -> HTTPResponse:
+    data = f"hello {name}!"
     return HTTPResponse(body=data)
 
 @server.post("/submit")
