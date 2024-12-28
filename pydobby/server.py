@@ -2,7 +2,8 @@ import logging
 import socket
 import threading
 
-from pydobby.http import HTTPRequest, HTTPResponse
+from pydobby.request import HTTPRequest
+from pydobby.response import HTTPResponse
 from pydobby.router import Router
 
 
@@ -20,7 +21,6 @@ class HTTPServer:
         self.router = Router()
         self.middlewares = []
 
-    
     def register_middleware(self, middleware_class):
         self.middlewares.append(middleware_class)
 

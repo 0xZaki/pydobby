@@ -1,5 +1,8 @@
-from pydobby.http import HTTPRequest, HTTPResponse
 import re
+
+from pydobby.request import HTTPRequest
+from pydobby.response import HTTPResponse
+
 
 class Router:
     def __init__(self):
@@ -24,7 +27,7 @@ class Router:
         return lambda handler: self.add_route(path, 'DELETE', handler)
 
     def handle_request(self, request: HTTPRequest) -> HTTPResponse:
-        handlers,params = self._match_path(request)
+        handlers, params = self._match_path(request)
         if not handlers:
             return HTTPResponse(
                 status_code=404,
@@ -47,5 +50,5 @@ class Router:
             if match:
                 params = match.groupdict()
                 return handlers, params
-            
+
         return None, None
