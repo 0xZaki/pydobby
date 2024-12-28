@@ -21,7 +21,10 @@ server.register_middleware(LoggingMiddleware)
 @server.get("/hello")
 def home(request: HTTPRequest) -> HTTPResponse:
     data = f"hello anon"
-    return HTTPResponse(body=data)
+    headers = {
+        "Server": "pydobby"
+    }
+    return HTTPResponse(body=data, headers=headers, content_type="text/plain")
 
 @server.get("/hello/<name>")
 def home(request: HTTPRequest, name) -> HTTPResponse:

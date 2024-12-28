@@ -42,7 +42,7 @@ class HTTPRequest:
             method, path, _ = request_line.split(' ')
             self.method = method.upper()
             url = urlparse(path)
-            self.path = path
+            self.path = url.path
             self.query_params = parse_qs(url.query)
         except Exception as e:
             logging.error(f"Error parsing request line: {e}")
@@ -75,12 +75,13 @@ class HTTPResponse:
         self.headers = {}
         if headers:
             self.headers.update(headers)
-        if "Content-Type" not in self.headers:
-            self.headers["Content-Type"] = content_type
-        elif self.headers["Content-Type"] != content_type:
-            raise ValueError("Content-Type header must be the same as the content_type argument")
-        self.headers.pop("Content-Length", None)
-        self.headers["Content-Length"] = str(len(self.body.encode('utf-8')))
+        
+        if body:
+            if "Content-Type" not in self.headers:
+                self.headers["Content-Type"] = content_type
+            elif self.headers["Content-Type"] != content_type:
+                raise ValueError("Content-Type header must be the same as the content_type argument")
+            self.headers["Content-Length"] = str(len(self.body.encode('utf-8')))
 
     def _validate_status_code(self, status_code: int):
         try:
