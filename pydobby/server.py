@@ -13,7 +13,9 @@ class HTTPServer:
         self.port = port
 
         # refer to https://docs.python.org/3/library/socket.html (unix sockets)
-        self.server_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
+        self.server_socket = socket.socket(
+            family=socket.AF_INET, type=socket.SOCK_STREAM
+        )
 
         # allow reuse of the same address if socket is in TIME_WAIT state
         self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -47,8 +49,7 @@ class HTTPServer:
                 client_socket, address = self.server_socket.accept()
                 logging.info(f"new connection: {address}")
                 client_thread = threading.Thread(
-                    target=self.handle_client,
-                    args=(client_socket, address)
+                    target=self.handle_client, args=(client_socket, address)
                 )
                 client_thread.start()
 
@@ -61,7 +62,7 @@ class HTTPServer:
                     if not data:
                         break
 
-                    message = data.decode('utf-8')
+                    message = data.decode("utf-8")
                     logging.info(f"Received from {address}: {message}")
 
                     request = HTTPRequest(message)
@@ -77,4 +78,4 @@ class HTTPServer:
 
                 except Exception as e:
                     client_socket.sendall(HTTPResponse(500).to_bytes())
-                    raise RuntimeError('internal server error:', e)
+                    raise RuntimeError("internal server error:", e)

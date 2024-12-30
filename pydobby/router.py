@@ -15,16 +15,16 @@ class Router:
         return handler
 
     def get(self, path: str):
-        return lambda handler: self.add_route(path, 'GET', handler)
+        return lambda handler: self.add_route(path, "GET", handler)
 
     def post(self, path: str):
-        return lambda handler: self.add_route(path, 'POST', handler)
+        return lambda handler: self.add_route(path, "POST", handler)
 
     def put(self, path: str):
-        return lambda handler: self.add_route(path, 'PUT', handler)
+        return lambda handler: self.add_route(path, "PUT", handler)
 
     def delete(self, path: str):
-        return lambda handler: self.add_route(path, 'DELETE', handler)
+        return lambda handler: self.add_route(path, "DELETE", handler)
 
     def handle_request(self, request: HTTPRequest) -> HTTPResponse:
         handlers, params = self._match_path(request)
@@ -41,7 +41,7 @@ class Router:
 
     def _match_path(self, request: HTTPRequest) -> dict:
         for path, handlers in self.routes.items():
-            regex_path = re.sub(r'<(\w+)>', r'(?P<\1>[^/]+)', path)
+            regex_path = re.sub(r"<(\w+)>", r"(?P<\1>[^/]+)", path)
 
             regex_path = f"^{regex_path}$"
 

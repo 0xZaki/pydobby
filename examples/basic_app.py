@@ -1,7 +1,7 @@
 import json
 import logging
 
-from pydobby import PyDobby, HTTPRequest, HTTPResponse
+from pydobby import HTTPRequest, HTTPResponse, PyDobby
 
 app = PyDobby(port=8001)
 
@@ -22,10 +22,8 @@ app.register_middleware(LoggingMiddleware)
 
 @app.get("/hello")
 def home(request: HTTPRequest) -> HTTPResponse:
-    data = f"hello anon"
-    headers = {
-        "Server": "pydobby"
-    }
+    data = "hello anon"
+    headers = {"Server": "pydobby"}
     return HTTPResponse(body=data, headers=headers, content_type="text/plain")
 
 
@@ -38,6 +36,7 @@ def hello(request: HTTPRequest, name) -> HTTPResponse:
 @app.post("/submit")
 def submit(request: HTTPRequest) -> HTTPResponse:
     data = json.loads(request.body)
+    logging.info(data)
     return HTTPResponse(status_code=201)
 
 

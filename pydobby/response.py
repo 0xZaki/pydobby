@@ -11,10 +11,16 @@ class HTTPResponse:
         500: "Internal Server Error",
         501: "Not Implemented",
         502: "Bad Gateway",
-        503: "Service Unavailable"
+        503: "Service Unavailable",
     }
 
-    def __init__(self, status_code=200, body: str = "", headers: dict = None, content_type: str = "text/plain"):
+    def __init__(
+        self,
+        status_code=200,
+        body: str = "",
+        headers: dict = None,
+        content_type: str = "text/plain",
+    ):
         self._validate_status_code(status_code)
         self.status_code = status_code
         self.body = body
@@ -28,8 +34,10 @@ class HTTPResponse:
             if "Content-Type" not in self.headers:
                 self.headers["Content-Type"] = content_type
             elif self.headers["Content-Type"] != content_type:
-                raise ValueError("Content-Type header must be the same as the content_type argument")
-            self.headers["Content-Length"] = str(len(self.body.encode('utf-8')))
+                raise ValueError(
+                    "Content-Type header must be the same as the content_type argument"
+                )
+            self.headers["Content-Length"] = str(len(self.body.encode("utf-8")))
 
     def _validate_status_code(self, status_code: int):
         try:
@@ -46,4 +54,4 @@ class HTTPResponse:
             for header, value in self.headers.items():
                 response += f"{header}: {value}\r\n"
         response += "\r\n" + self.body
-        return response.encode('utf-8')
+        return response.encode("utf-8")

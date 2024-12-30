@@ -1,11 +1,11 @@
-from .request import HTTPRequest
-from .response import HTTPResponse
-from .router import Router
+from .request import HTTPRequest as HTTPRequest
+from .response import HTTPResponse as HTTPResponse
+from .router import Router as Router
 from .server import HTTPServer
 
 
 class PyDobby:
-    def __init__(self, host='127.0.0.1', port=8000):
+    def __init__(self, host="127.0.0.1", port=8000):
         self.server = HTTPServer(host, port)
 
     def get(self, path):
