@@ -5,6 +5,10 @@ from pydobby import HTTPRequest, HTTPResponse, PyDobby
 
 app = PyDobby(port=8001)
 
+# configure static folder
+static_folder = "static"
+app.serve_static(static_folder)
+
 
 class LoggingMiddleware:
     def __init__(self, get_response):
@@ -18,6 +22,12 @@ class LoggingMiddleware:
 
 
 app.register_middleware(LoggingMiddleware)
+
+
+# serve static files
+@app.get("/static/<path>")
+def serve_static(request: HTTPRequest, path: str) -> HTTPResponse:
+    return app.get_static_file(path)
 
 
 @app.get("/hello")

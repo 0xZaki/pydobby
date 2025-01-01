@@ -1,4 +1,6 @@
 import logging
+import mimetypes
+import os
 import socket
 import threading
 
@@ -11,6 +13,7 @@ class HTTPServer:
     def __init__(self, host: str = "0.0.0.0", port: int = 8000):
         self.host = host
         self.port = port
+        self.static_folder = None
 
         # refer to https://docs.python.org/3/library/socket.html (unix sockets)
         self.server_socket = socket.socket(
@@ -38,6 +41,34 @@ class HTTPServer:
 
     def delete(self, path: str):
         return self.router.delete(path)
+
+    def serve_static(self, directory: str):
+        """set the static file directory"""
+        self.static_folder = os.path.abspath(directory)
+
+    def get_static_file(self, path: str) -> HTTPResponse:
+        """serve a static file from the configured directory"""
+        if not self.static_folder:
+            return HTTPResponse(status_code=404)
+
+        file_path = os.path.join(self.static_folder, path.lstrip("/"))
+
+        # prevent directory traversal
+        if not os.path.abspath(file_path).startswith(self.static_folder):
+            return HTTPResponse(status_code=403)
+
+        if not os.path.exists(file_path) or not os.path.isfile(file_path):
+            return HTTPResponse(status_code=404)
+
+        with open(file_path, "rb") as f:
+            content = f.read()
+
+        # get content type
+        content_type, _ = mimetypes.guess_type(file_path)
+        if not content_type:
+            content_type = "application/octet-stream"
+
+        return HTTPResponse(body=content, content_type=content_type)
 
     def start(self):
         """Start server"""

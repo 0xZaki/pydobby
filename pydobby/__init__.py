@@ -28,6 +28,14 @@ class PyDobby:
         """Register a middleware class"""
         self.server.register_middleware(middleware_class)
 
+    def serve_static(self, directory):
+        """Configure the static file directory"""
+        return self.server.serve_static(directory)
+
+    def get_static_file(self, path):
+        """Serve a static file from the configured directory"""
+        return self.server.get_static_file(path)
+
     def start(self):
         """Start the server"""
         self.server.start()
