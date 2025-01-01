@@ -17,27 +17,44 @@ class HTTPResponse:
     def __init__(
         self,
         status_code=200,
-        body: str = "",
+        body: str | bytes = "",
         headers: dict = None,
         content_type: str = "text/plain",
     ):
         self._validate_status_code(status_code)
         self.status_code = status_code
-        self.body = body
         self.status_text = self.STATUS_CODES.get(status_code, "temp")
         self.content_type = content_type
-        self.headers = {}
-        if headers:
-            self.headers.update(headers)
+        self.headers = headers or {}
+        self.body = self._prepare_body(body)
+        self.headers = headers or {}
+        self._set_headers(content_type)
 
-        if body:
-            if "Content-Type" not in self.headers:
-                self.headers["Content-Type"] = content_type
-            elif self.headers["Content-Type"] != content_type:
-                raise ValueError(
-                    "Content-Type header must be the same as the content_type argument"
-                )
-            self.headers["Content-Length"] = str(len(self.body.encode("utf-8")))
+    def _set_headers(self, content_type: str):
+        if self.body:
+            self._set_content_type(content_type)
+            self._set_content_length()
+
+    def _set_content_type(self, content_type: str):
+        if "Content-Type" not in self.headers:
+            self.headers["Content-Type"] = content_type
+        elif self.headers["Content-Type"] != content_type:
+            raise ValueError("Content-Type header must match the content_type argument")
+
+    def _set_content_length(self):
+        self.headers["Content-Length"] = str(len(self.body))
+
+    def _prepare_body(self, body: str | bytes):
+        if body == "" or body is None:
+            return b""
+
+        # handle both string and bytes
+        if isinstance(body, str):
+            return body.encode("utf-8")
+        elif isinstance(body, bytes):
+            return body
+        else:
+            raise ValueError("Body must be either a string or bytes")
 
     def _validate_status_code(self, status_code: int):
         try:
@@ -53,5 +70,6 @@ class HTTPResponse:
         if self.headers:
             for header, value in self.headers.items():
                 response += f"{header}: {value}\r\n"
-        response += "\r\n" + self.body
-        return response.encode("utf-8")
+        response += "\r\n"
+        headers = response.encode("utf-8")
+        return headers + self.body
