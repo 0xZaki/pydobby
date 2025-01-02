@@ -32,7 +32,10 @@ def serve_static(request: HTTPRequest, path: str) -> HTTPResponse:
 
 @app.get("/hello")
 def home(request: HTTPRequest) -> HTTPResponse:
-    data = "hello anon"
+    if request.cookies.get("name"):
+        data = f"hello {request.cookies['name']}!"
+    else:
+        data = "hello anon"
     headers = {"Server": "pydobby"}
     return HTTPResponse(body=data, headers=headers, content_type="text/plain")
 
@@ -40,7 +43,12 @@ def home(request: HTTPRequest) -> HTTPResponse:
 @app.get("/hello/<name>")
 def hello(request: HTTPRequest, name) -> HTTPResponse:
     data = f"hello {name}!"
-    return HTTPResponse(body=data)
+    headers = {"Server": "pydobby"}
+    res = HTTPResponse(body=data, headers=headers, content_type="text/plain")
+    res.set_cookie(
+        "name", name, max_age=3600, path="/", secure=True, httponly=True, samesite="Lax"
+    )
+    return res
 
 
 @app.post("/submit")

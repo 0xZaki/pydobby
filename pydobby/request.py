@@ -9,6 +9,7 @@ class HTTPRequest:
         self.headers = {}
         self.body = ""
         self.query_params = {}
+        self.cookies = {}
         self.is_valid = True
         self._parse_request(raw_data)
 
@@ -46,3 +47,15 @@ class HTTPRequest:
         except Exception as e:
             logging.error(f"Error parsing request line: {e}")
             self.is_valid = False
+
+    def _parse_headers(self, headers: list):
+        for header in headers:
+            if ":" in header:
+                key, value = header.split(":", 1)
+                self.headers[key.strip().lower()] = value.strip()
+
+        if "cookie" in self.headers:
+            cookies = self.headers["cookie"].split("; ")
+            for cookie in cookies:
+                name, value = cookie.split("=", 1)
+                self.cookies[name.strip()] = value.strip()

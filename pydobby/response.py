@@ -73,3 +73,36 @@ class HTTPResponse:
         response += "\r\n"
         headers = response.encode("utf-8")
         return headers + self.body
+
+    def set_cookie(
+        self,
+        name,
+        value,
+        max_age=None,
+        expires=None,
+        path="/",
+        domain=None,
+        secure=False,
+        httponly=False,
+        samesite="Lax",
+    ):
+        attributes = {
+            "Max-Age": max_age,
+            "Expires": expires,
+            "Path": path,
+            "Domain": domain,
+            "Secure": secure,
+            "HttpOnly": httponly,
+            "SameSite": samesite,
+        }
+
+        cookie = [f"{name}={value}"]
+
+        for key, val in attributes.items():
+            if isinstance(val, bool):
+                if val:
+                    cookie.append(key)
+            elif val is not None:
+                cookie.append(f"{key}={val}")
+
+        self.headers["Set-Cookie"] = "; ".join(cookie)
