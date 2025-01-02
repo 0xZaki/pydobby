@@ -15,9 +15,14 @@ class HTTPRequest:
 
     def _parse_request(self, raw_data: str):
         try:
-            # get header and body
-            header_section, *body_section = raw_data.split("\r\n\r\n")
+            parts = raw_data.split("\r\n\r\n")
+            if len(parts) < 2:
+                self.is_valid = False
+                return
+
+            header_section, body_section = parts
             request_lines = header_section.split("\r\n")
+
             # parse request line
             if request_lines:
                 self._parse_request_line(request_lines[0])
@@ -26,12 +31,9 @@ class HTTPRequest:
                 return
 
             # parse headers
-            for line in request_lines[1:]:
-                if ":" in line:
-                    key, value = line.split(":", 1)
-                    self.headers[key.strip().lower()] = value.strip()
+            self._parse_headers(request_lines[1:])
 
-            self.body = body_section[0] if body_section else ""
+            self.body = body_section
 
         except Exception as e:
             logging.error(f"Error parsing request: {e}")
