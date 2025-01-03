@@ -43,15 +43,17 @@ class TestStaticFiles:
                 "test.png": (b"fake-png-data", "image/png"),
                 "test.js": (
                     b"function test() { return true; }",
-                    "application/javascript",
+                    ["application/javascript", "text/javascript"],
                 ),
-                "test.min.js": (b"function t(){return!0}", "application/javascript"),
+                "test.min.js": (
+                    b"function t(){return!0}",
+                    ["application/javascript", "text/javascript"],
+                ),
                 "script.mjs": (
                     b"export default function test() { return true; }",
-                    "application/javascript",
+                    ["application/javascript", "text/javascript"],
                 ),
             }
-
             for filename, (content, expected_type) in files.items():
                 file_path = os.path.join(temp_dir, filename)
                 with open(file_path, "wb") as f:
@@ -63,7 +65,10 @@ class TestStaticFiles:
                 response = app.get_static_file(filename)
                 assert response.status_code == 200
                 assert response.body == content
-                assert response.headers["Content-Type"] == expected_type
+                if isinstance(expected_type, list):
+                    assert response.headers["Content-Type"] in expected_type
+                else:
+                    assert response.headers["Content-Type"] == expected_type
 
     def test_no_static_folder_configured(self, app):
         response = app.get_static_file("test.txt")
