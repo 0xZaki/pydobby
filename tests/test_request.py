@@ -39,3 +39,8 @@ class TestHTTPRequest:
         raw_request = "Invalid Request Format"
         request = HTTPRequest(raw_request)
         assert not request.is_valid
+
+    def test_invalid_request_line(self):
+        raw_request = "GETT /hello HTTP/1.1\r\n\r\n"
+        request = HTTPRequest(raw_request)
+        assert not request.is_valid

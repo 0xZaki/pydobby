@@ -1,5 +1,6 @@
 import logging
 from urllib.parse import parse_qs, urlparse
+import re
 
 
 class HTTPRequest:
@@ -25,7 +26,9 @@ class HTTPRequest:
 
             # parse request line
             if request_lines:
-                self._parse_request_line(request_lines[0])
+                if not self._parse_request_line(request_lines[0]):
+                    self.is_valid = False
+                    return
             else:
                 self.is_valid = False
                 return
@@ -38,17 +41,28 @@ class HTTPRequest:
         except Exception as e:
             logging.error(f"Error parsing request: {e}")
             self.is_valid = False
+            return
 
     def _parse_request_line(self, request_line: str):
-        try:
-            method, path, _ = request_line.split(" ")
-            self.method = method.upper()
-            url = urlparse(path)
-            self.path = url.path
-            self.query_params = parse_qs(url.query)
-        except Exception as e:
-            logging.error(f"Error parsing request line: {e}")
+        VALID_METHODS = {"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"}
+
+        components = request_line.split(" ")
+        if len(components) < 3:
+            return False
+
+        method, path, version = components
+        self.method = method.upper()
+        if self.method not in VALID_METHODS:
             self.is_valid = False
+            return False
+
+        url = urlparse(path)
+        self.path = url.path
+        self.query_params = parse_qs(url.query)
+
+        if not re.match(r"^HTTP/\d\.\d$", version):
+            return False
+        return True
 
     def _parse_headers(self, headers: list):
         for header in headers:
