@@ -79,3 +79,111 @@ class TestMiddleware:
             "first_post",
         ]
         assert execution_order == expected_order
+
+
+class TestCORSMiddleware:
+    def test_preflight_request(self, app, make_request):
+        from pydobby.middlewares import CORSMiddleware
+
+        app.register_middleware(CORSMiddleware)
+        app.conf["CORS_ALLOWED_ORIGINS"] = ["http://localhost:3000"]
+        app.conf["CORS_ALLOWED_METHODS"] = ["GET", "POST"]
+        app.conf["CORS_ALLOWED_HEADERS"] = ["Content-Type"]
+
+        request = make_request(
+            method="OPTIONS",
+            path="/test",
+            headers={
+                "Origin": "http://localhost:3000",
+                "Access-Control-Request-Method": "POST",
+            },
+        )
+
+        handler = app.server.router.handle_request
+        for middleware_class in reversed(app.server.middlewares):
+            handler = middleware_class(handler)
+
+        response = handler(request)
+
+        assert response.status_code == 200
+        assert (
+            response.headers["Access-Control-Allow-Origin"] == "http://localhost:3000"
+        )
+        assert response.headers["Access-Control-Allow-Methods"] == "GET, POST"
+        assert response.headers["Access-Control-Allow-Headers"] == "Content-Type"
+        assert response.headers["Vary"] == "Origin"
+
+    def test_allowed_origin(self, app, make_request):
+        from pydobby.middlewares import CORSMiddleware
+
+        app.register_middleware(CORSMiddleware)
+        app.conf["CORS_ALLOWED_ORIGINS"] = ["http://localhost:3000"]
+
+        @app.get("/test")
+        def test_route(request):
+            return HTTPResponse(200)
+
+        request = make_request(
+            path="/test",
+            headers={"Origin": "http://localhost:3000"},
+        )
+
+        handler = app.server.router.handle_request
+        for middleware_class in reversed(app.server.middlewares):
+            handler = middleware_class(handler)
+
+        response = handler(request)
+
+        assert (
+            response.headers["Access-Control-Allow-Origin"] == "http://localhost:3000"
+        )
+        assert response.headers["Vary"] == "Origin"
+
+    def test_disallowed_origin(self, app, make_request):
+        from pydobby.middlewares import CORSMiddleware
+
+        app.register_middleware(CORSMiddleware)
+        app.conf["CORS_ALLOWED_ORIGINS"] = ["http://localhost:3000"]
+
+        @app.get("/test")
+        def test_route(request):
+            return HTTPResponse(200)
+
+        request = make_request(
+            path="/test",
+            headers={"Origin": "http://example.com"},
+        )
+
+        handler = app.server.router.handle_request
+        for middleware_class in reversed(app.server.middlewares):
+            handler = middleware_class(handler)
+
+        response = handler(request)
+
+        assert (
+            response.headers["Access-Control-Allow-Origin"] == "http://localhost:3000"
+        )
+        assert response.headers["Vary"] == "Origin"
+
+    def test_default_configuration(self, app, make_request):
+        from pydobby.middlewares import CORSMiddleware
+
+        app.register_middleware(CORSMiddleware)
+
+        @app.get("/test")
+        def test_route(request):
+            return HTTPResponse(200)
+
+        request = make_request(
+            path="/test",
+            headers={"Origin": "http://example.com"},
+        )
+
+        handler = app.server.router.handle_request
+        for middleware_class in reversed(app.server.middlewares):
+            handler = middleware_class(handler)
+
+        response = handler(request)
+
+        assert response.headers["Access-Control-Allow-Origin"] == "http://example.com"
+        assert response.headers["Vary"] == "Origin"
