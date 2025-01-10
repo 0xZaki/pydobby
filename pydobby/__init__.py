@@ -2,11 +2,13 @@ from .request import HTTPRequest as HTTPRequest
 from .response import HTTPResponse as HTTPResponse
 from .router import Router as Router
 from .server import HTTPServer
+from .middlewares import CORSMiddleware as CORSMiddleware
 
 
 class PyDobby:
-    def __init__(self, host="127.0.0.1", port=8000):
+    def __init__(self, host="127.0.0.1", port=8000, conf=None):
         self.server = HTTPServer(host, port)
+        self.conf = conf if conf else {}
 
     def get(self, path):
         """Register a GET route"""
@@ -26,6 +28,7 @@ class PyDobby:
 
     def register_middleware(self, middleware_class):
         """Register a middleware class"""
+        middleware_class.app = self
         self.server.register_middleware(middleware_class)
 
     def serve_static(self, directory):

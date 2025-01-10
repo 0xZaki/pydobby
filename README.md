@@ -10,6 +10,7 @@ Lightweight HTTP server framework built on Python's socket programming using TCP
 - Custom headers support
 - Static file serving
 - Cookie handling
+- CORS support
 
 
 ## Installation
@@ -128,6 +129,20 @@ def login(request: HTTPRequest) -> HTTPResponse:
     return response
 ```
 
+### CORS Configuration
+
+```python
+# CORS configuration
+app.conf = {
+    "CORS_ALLOWED_ORIGINS": ["*"],
+    "CORS_ALLOWED_METHODS": ["*"],
+    "CORS_ALLOWED_HEADERS": ["*"],
+}
+
+# register CORS middleware
+app.register_middleware(CORSMiddleware)
+```
+
 ### Static File Serving
 
 ```python
@@ -172,7 +187,7 @@ python examples/basic_app.py
 Improvements and features:
 
 - [x] Static File Serving
-- [ ] CORS Support
+- [x] CORS Support
 - [x] Cookie Handling
 - [ ] Session Management
 - [ ] File Upload

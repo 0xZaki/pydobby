@@ -2,14 +2,23 @@ import json
 import logging
 
 from pydobby import HTTPRequest, HTTPResponse, PyDobby
+from pydobby.middlewares import CORSMiddleware
 
 app = PyDobby(port=8001)
+
+# app configurations
+app.conf = {
+    "CORS_ALLOWED_ORIGINS": ["*"],
+    "CORS_ALLOWED_METHODS": ["*"],
+    "CORS_ALLOWED_HEADERS": ["*"],
+}
 
 # configure static folder
 static_folder = "static"
 app.serve_static(static_folder)
 
 
+# add middlewares
 class LoggingMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
@@ -21,6 +30,7 @@ class LoggingMiddleware:
         return response
 
 
+app.register_middleware(CORSMiddleware)
 app.register_middleware(LoggingMiddleware)
 
 

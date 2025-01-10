@@ -68,10 +68,10 @@ class HTTPRequest:
         for header in headers:
             if ":" in header:
                 key, value = header.split(":", 1)
-                self.headers[key.strip().lower()] = value.strip()
+                self.headers[key.strip()] = value.strip()
 
-        if "cookie" in self.headers:
-            cookies = self.headers["cookie"].split("; ")
+        if "Cookie" in self.headers:
+            cookies = self.headers["Cookie"].split("; ")
             for cookie in cookies:
                 name, value = cookie.split("=", 1)
                 self.cookies[name.strip()] = value.strip()

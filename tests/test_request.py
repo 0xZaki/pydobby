@@ -18,8 +18,8 @@ class TestHTTPRequest:
         assert request.method == "GET"
         assert request.path == "/hello"
         assert request.query_params == {"name": ["world"]}
-        assert request.headers["host"] == "localhost:8001"
-        assert request.headers["user-agent"] == "test"
+        assert request.headers["Host"] == "localhost:8001"
+        assert request.headers["User-Agent"] == "test"
         assert request.cookies == {"session": "abc123", "user": "john"}
 
     def test_request_with_body(self, make_request):
