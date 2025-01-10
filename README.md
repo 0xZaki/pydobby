@@ -8,6 +8,8 @@ Lightweight HTTP server framework built on Python's socket programming using TCP
 - Query parameter parsing
 - Middleware system for request/response processing
 - Custom headers support
+- Static file serving
+- Cookie handling
 
 
 ## Installation
@@ -18,6 +20,8 @@ pip install pydobby
 
 ## Usage
 
+### Basic Routing
+
 ```python
 from pydobby import PyDobby, HTTPRequest, HTTPResponse
 import json
@@ -25,7 +29,7 @@ import logging
 
 app = PyDobby()
 
-# Custom middleware example
+# custom middleware example
 class LoggingMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
@@ -38,20 +42,108 @@ class LoggingMiddleware:
 
 app.register_middleware(LoggingMiddleware)
 
-# Basic route with path parameter
+### Basic Routing
+
+```python
+# Basic route
+@app.get("/hello")
+def home(request: HTTPRequest) -> HTTPResponse:
+
+    return HTTPResponse(body="Hello World", content_type="text/plain")
+```
+
+### Path Parameters
+
+```python
+# route with path parameter and cookie setting
 @app.get("/hello/<name>")
 def hello(request: HTTPRequest, name: str) -> HTTPResponse:
-    return HTTPResponse(body=f"Hello, {name}!")
+    data = f"hello {name}!"
+    headers = {"Server": "pydobby"}
+    response = HTTPResponse(body=data, headers=headers, content_type="text/plain")
+    # set a cookie
+    response.set_cookie(
+        "name", name,
+        max_age=3600,
+        path="/",
+        secure=True,
+        httponly=True,
+        samesite="Lax"
+    )
+    return response
+```
 
+### Headers
 
+```python
+# setting custom headers
+@app.get("/api/status")
+def status(request: HTTPRequest) -> HTTPResponse:
+    headers = {
+        "Server": "pydobby",
+        "X-Custom-Header": "custom value"
+    }
+    return HTTPResponse(
+        body="OK",
+        headers=headers,
+        content_type="text/plain"
+    )
+```
 
-# JSON handling example
+### JSON Handling
+
+```python
+# POST route with JSON handling
 @app.post("/submit")
 def submit(request: HTTPRequest) -> HTTPResponse:
-    data = json.loads(request.body)
-    return HTTPResponse(status_code=201)
+    try:
+        data = json.loads(request.body)
+        return HTTPResponse(
+            status_code=201,
+            body=json.dumps({"status": "success"}),
+            content_type="application/json"
+        )
+    except json.JSONDecodeError:
+        return HTTPResponse(
+            status_code=400,
+            body=json.dumps({"error": "Invalid JSON"}),
+            content_type="application/json"
+        )
+```
+
+### Cookie Handling
+
+```python
+# getting cookies
+@app.get("/profile")
+def profile(request: HTTPRequest) -> HTTPResponse:
+    user_id = request.cookies.get("user_id")
+    return HTTPResponse(body=f"User ID: {user_id}")
+
+# setting cookies
+@app.post("/login")
+def login(request: HTTPRequest) -> HTTPResponse:
+    response = HTTPResponse(body="Logged in")
+    response.set_cookie("user_id", "123", max_age=3600)
+    return response
+```
+
+### Static File Serving
+
+```python
+# configure static file directory
+app.serve_static("static")
+
+# serve static files through a route
+@app.get("/static/<path>")
+def serve_static(request: HTTPRequest, path: str) -> HTTPResponse:
+    return app.get_static_file(path)
+```
+
 
 # Run the server
+
+```python
 if __name__ == "__main__":
     app.start()
 ```
@@ -79,9 +171,9 @@ python examples/basic_app.py
 
 Improvements and features:
 
-- [ ] Static File Serving
+- [x] Static File Serving
 - [ ] CORS Support
-- [ ] Cookie Handling
+- [x] Cookie Handling
 - [ ] Session Management
 - [ ] File Upload
 - [ ] SSL Support
